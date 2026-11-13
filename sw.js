@@ -1,4 +1,4 @@
-const CACHE_NAME = 'riverhomes-reconciler-v2';
+const CACHE_NAME = 'riverhomes-reconciler-v3';
 const ASSETS = [
   './',
   './index.html',
