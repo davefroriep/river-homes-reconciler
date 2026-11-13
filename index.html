@@ -617,6 +617,20 @@
       padding: 8px;
       text-align: center;
     }
+    .video-pill {
+      position: absolute;
+      left: 7px;
+      bottom: 7px;
+      background: rgba(15, 23, 42, 0.85);
+      color: #f8fafc;
+      border: 1px solid rgba(56, 189, 248, 0.55);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      pointer-events: none;
+    }
     .photo-meta {
       padding: 7px 9px;
       font-size: 11.5px;
@@ -838,6 +852,7 @@
         <div class="lb-sub" id="lb-sub"></div>
       </div>
       <div class="lb-actions">
+        <a class="btn btn-primary" id="btn-lb-video" href="#" target="_blank" rel="noopener" style="display:none;">▶ Open Full Video</a>
         <button type="button" class="btn" id="btn-lb-rotate">↻ Rotate 90°</button>
         <button type="button" class="btn" id="btn-lb-zoom">🔍 Zoom 2x</button>
         <button type="button" class="btn btn-primary" id="btn-lb-close">✕ Close (Esc)</button>
@@ -852,7 +867,7 @@
 
   <footer>
     <div>River Homes, LLC • Zero-Plaintext AES-128-GCM Reconciler • Primary Calendar Memory Firewall Active</div>
-    <div class="rev-badge">Rev v1.3 — 2026-11-13 09:31</div>
+    <div class="rev-badge">Rev v1.4 — 2026-11-13 12:52</div>
   </footer>
 
   <script>
@@ -1260,18 +1275,29 @@
       return propStr === state.selectedProp || propStr.startsWith(state.selectedProp + ' ');
     }
 
+    function fmtVideoDur(sec) {
+      if (!sec || sec <= 0) return 'VIDEO';
+      const s = Math.round(sec);
+      const m = Math.floor(s / 60);
+      const r = String(s % 60).padStart(2, '0');
+      return `${m}:${r}`;
+    }
+
     function buildPhotoCardHtml(p, idxInLightbox) {
       const src = state.photoMap[p.id] || '';
+      const vidBadge = p.is_video ? `<div class="video-pill">🎬 ${fmtVideoDur(p.duration_s)}</div>` : '';
+      const kindTag = p.is_video ? '🎬 Video' : (p.is_screenshot ? '📱 Screen' : '📷 EXIF');
       return `
         <div class="photo-card" data-lbidx="${idxInLightbox}">
           <div class="photo-thumb-wrap">
             <img data-pid="${esc(p.id)}" src="${src}" alt="${esc(p.filename)}" style="${src ? 'display:block;' : 'display:none;'}" />
-            <div class="photo-placeholder" style="${src ? 'display:none;' : ''}">Loading encrypted photo…</div>
+            <div class="photo-placeholder" style="${src ? 'display:none;' : ''}">Loading encrypted preview…</div>
+            ${vidBadge}
           </div>
           <div class="photo-meta">
             <div class="photo-meta-top">
               <span>${esc(p.time_label)}</span>
-              <span>${p.is_screenshot ? '📱 Screen' : '📷 EXIF'}</span>
+              <span>${kindTag}</span>
             </div>
             <div class="photo-meta-prop" title="${esc(p.property || p.filename)}">${esc(p.clean_property || p.property || p.filename)}</div>
           </div>
@@ -1606,8 +1632,18 @@
       document.getElementById('btn-lb-zoom').textContent = state.lbZoomed ? '🔍 Fit Screen' : '🔍 Zoom 2x';
       document.getElementById('lb-caption').textContent =
         `${item.clean_property || item.property || 'Photo'} — ${item.day_header || ''} @ ${item.time_label}`;
+      const vidSuffix = item.is_video ? ` · Video preview frame (${fmtVideoDur(item.duration_s)})` : '';
       document.getElementById('lb-sub').textContent =
-        `${item.filename} (${state.lightboxIdx + 1} of ${state.lightboxList.length})`;
+        `${item.filename}${vidSuffix} (${state.lightboxIdx + 1} of ${state.lightboxList.length})`;
+      const vidBtn = document.getElementById('btn-lb-video');
+      if (vidBtn) {
+        if (item.is_video && item.drive_url) {
+          vidBtn.href = item.drive_url;
+          vidBtn.style.display = 'inline-flex';
+        } else {
+          vidBtn.style.display = 'none';
+        }
+      }
     }
 
     /* Event Listeners */
