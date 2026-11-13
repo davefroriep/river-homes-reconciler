@@ -212,8 +212,8 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 11px 15px;
-      margin-bottom: 18px;
+      padding: 11px 14px;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -221,28 +221,101 @@
       flex-wrap: wrap;
     }
     .view-tabs {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 6px;
       background: var(--bg-deep);
       padding: 4px;
-      border-radius: 9px;
-      border: 1px solid var(--border);
+      border-radius: 10px;
+      border: 1px solid var(--border-bright);
+      flex: 1 1 420px;
+      max-width: 560px;
     }
     .view-tab {
       background: transparent;
       color: var(--text-sec);
-      border: none;
-      padding: 7px 14px;
-      border-radius: 6px;
+      border: 1px solid transparent;
+      padding: 9px 10px;
+      border-radius: 7px;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.14s;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .view-tab > * { pointer-events: none; }
+    .view-tab:hover {
+      color: #fff;
+      background: rgba(56, 189, 248, 0.08);
     }
     .view-tab.active {
       background: var(--blue-dark);
+      border-color: var(--blue);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(2, 132, 199, 0.45);
+    }
+    .tab-cnt {
+      display: inline-block;
+      margin-left: 4px;
+      font-size: 11px;
+      opacity: 0.88;
+      padding: 0 5px;
+      border-radius: 99px;
+      background: rgba(15, 23, 42, 0.45);
+    }
+
+    /* Quick Horizontal Property Filter Strip */
+    .prop-filter-strip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      overflow-x: auto;
+      padding: 2px 2px 10px;
+      margin-bottom: 10px;
+      scrollbar-width: thin;
+    }
+    .prop-chip {
+      flex: 0 0 auto;
+      background: var(--bg-card);
+      color: var(--text-sec);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.14s;
+      touch-action: manipulation;
+    }
+    .prop-chip:hover { border-color: var(--border-bright); color: #fff; }
+    .prop-chip.active {
+      background: var(--blue-dark);
+      border-color: var(--blue);
       color: #fff;
     }
+    .prop-chip.supply { border-color: rgba(245, 158, 11, 0.35); }
+
+    .view-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: rgba(2, 132, 199, 0.11);
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      border-radius: 10px;
+      padding: 9px 14px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: var(--text-sec);
+    }
+    .view-banner strong { color: #fff; }
+
     .toggles {
       display: flex;
       align-items: center;
@@ -266,6 +339,12 @@
       grid-template-columns: 380px minmax(0, 1fr);
       gap: 20px;
       align-items: start;
+    }
+    .main-grid.full-view {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .main-grid.full-view .sidebar-panel {
+      display: none !important;
     }
 
     /* Left Sticky Property Summary Panel */
@@ -649,14 +728,17 @@
     /* Responsive Breakpoints */
     @media (max-width: 1120px) {
       .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .main-grid { grid-template-columns: 1fr; }
-      .sidebar-panel { position: static; max-height: none; }
+      .main-grid { grid-template-columns: minmax(0, 1fr); }
+      .view-tabs { max-width: 100%; flex-basis: 100%; }
+      #main-canvas { order: 1; }
+      .sidebar-panel { position: static; max-height: none; order: 2; }
     }
     @media (max-width: 640px) {
       .topbar { padding: 10px 12px; }
       .workspace-wrap { padding: 12px 12px 32px; }
       .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
       .kpi-val { font-size: 20px; }
+      .view-tab { font-size: 12px; padding: 8px 6px; }
       .ev-row { flex-direction: column; gap: 4px; }
       .ev-time { min-width: 0; }
       .photo-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -700,31 +782,39 @@
       <section class="kpi-grid" id="kpi-grid"></section>
 
       <section class="toolbar">
-        <div class="view-tabs">
-          <button type="button" class="view-tab active" data-view="days">📅 Day-by-Day</button>
-          <button type="button" class="view-tab" data-view="props">🏠 By Property / Invoice Prep</button>
-          <button type="button" class="view-tab" data-view="photos">📸 Photo &amp; Receipt Wall</button>
+        <div class="view-tabs" id="view-tabs-bar" role="tablist" aria-label="Grouping mode">
+          <button type="button" class="view-tab active" data-view="days" onclick="window.switchReconcilerView('days')">
+            <span>📅 By Day</span><span class="tab-cnt" id="cnt-days"></span>
+          </button>
+          <button type="button" class="view-tab" data-view="props" onclick="window.switchReconcilerView('props')">
+            <span>🏠 By Property</span><span class="tab-cnt" id="cnt-props"></span>
+          </button>
+          <button type="button" class="view-tab" data-view="photos" onclick="window.switchReconcilerView('photos')">
+            <span>📸 Photos</span><span class="tab-cnt" id="cnt-photos"></span>
+          </button>
         </div>
 
-        <div class="toggles">
-          <label class="toggle-lbl">
+        <div class="toggles" id="toolbar-toggles">
+          <label class="toggle-lbl" id="wrap-chk-anchors">
             <input type="checkbox" id="chk-anchors" checked />
-            <span>🧭 Calendar Memory Anchors</span>
+            <span>🧭 Calendar Anchors</span>
           </label>
-          <label class="toggle-lbl">
+          <label class="toggle-lbl" id="wrap-chk-comms">
             <input type="checkbox" id="chk-comms" checked />
             <span>💬 Texts &amp; Calls</span>
           </label>
           <label class="toggle-lbl">
             <input type="checkbox" id="chk-screenshots" />
-            <span id="lbl-screenshots">📱 Phone Screenshots</span>
+            <span id="lbl-screenshots">📱 Screenshots</span>
           </label>
-          <label class="toggle-lbl">
+          <label class="toggle-lbl" id="wrap-chk-empty">
             <input type="checkbox" id="chk-hide-empty" />
             <span>Hide Off-Days</span>
           </label>
         </div>
       </section>
+
+      <div class="prop-filter-strip" id="prop-filter-strip"></div>
 
       <div class="main-grid" id="split-layout">
         <aside class="sidebar-panel" id="sidebar-panel">
@@ -762,7 +852,7 @@
 
   <footer>
     <div>River Homes, LLC • Zero-Plaintext AES-128-GCM Reconciler • Primary Calendar Memory Firewall Active</div>
-    <div class="rev-badge">Rev v1.0 — 2026-11-13 07:28</div>
+    <div class="rev-badge">Rev v1.1 — 2026-11-13 08:10</div>
   </footer>
 
   <script>
@@ -974,9 +1064,86 @@
       });
     }
 
+    function updateTabCountsAndLayout() {
+      if (!state.data) return;
+      const daysCnt = (state.data.days || []).length;
+      const propsCnt = (state.data.properties || []).length;
+      const photosCnt = (state.data.days || []).reduce((acc, d) => {
+        const list = (d.photos || []).filter((p) => state.showScreenshots || !p.is_screenshot);
+        return acc + list.length;
+      }, 0);
+
+      const cd = document.getElementById('cnt-days');
+      const cp = document.getElementById('cnt-props');
+      const cph = document.getElementById('cnt-photos');
+      if (cd) cd.textContent = daysCnt;
+      if (cp) cp.textContent = propsCnt;
+      if (cph) cph.textContent = photosCnt;
+
+      document.querySelectorAll('.view-tab').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-view') === state.activeView);
+      });
+
+      const split = document.getElementById('split-layout');
+      if (split) {
+        split.classList.toggle('full-view', state.activeView !== 'days');
+      }
+
+      const isDays = state.activeView === 'days';
+      const wA = document.getElementById('wrap-chk-anchors');
+      const wC = document.getElementById('wrap-chk-comms');
+      const wE = document.getElementById('wrap-chk-empty');
+      if (wA) wA.style.display = isDays ? 'inline-flex' : 'none';
+      if (wC) wC.style.display = isDays ? 'inline-flex' : 'none';
+      if (wE) wE.style.display = isDays ? 'inline-flex' : 'none';
+    }
+
+    function renderPropFilterStrip() {
+      const strip = document.getElementById('prop-filter-strip');
+      if (!strip || !state.data) return;
+      const props = state.data.properties || [];
+      const chips = [
+        `<button type="button" class="prop-chip ${!state.selectedProp ? 'active' : ''}" data-pchip="">All Stops (${props.length})</button>`
+      ];
+      for (const p of props) {
+        const isSel = state.selectedProp === p.name;
+        const isSup = p.category === 'supply';
+        const shortName = p.name.length > 28 ? p.name.slice(0, 26) + '…' : p.name;
+        const hrs = p.mins ? ` · ${p.dur_label}` : '';
+        chips.push(
+          `<button type="button" class="prop-chip ${isSel ? 'active' : ''} ${isSup ? 'supply' : ''}" data-pchip="${esc(p.name)}" title="${esc(p.name)}">${esc(shortName)}${esc(hrs)}</button>`
+        );
+      }
+      strip.innerHTML = chips.join('');
+      strip.querySelectorAll('.prop-chip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const val = btn.getAttribute('data-pchip') || '';
+          state.selectedProp = (!val || state.selectedProp === val) ? null : val;
+          renderPropFilterStrip();
+          renderSidebarProps();
+          renderMainCanvas();
+          hydrateVisibleThumbnails();
+        });
+      });
+    }
+
+    window.switchReconcilerView = function(viewMode) {
+      if (!viewMode || !['days', 'props', 'photos'].includes(viewMode)) return;
+      state.activeView = viewMode;
+      updateTabCountsAndLayout();
+      renderPropFilterStrip();
+      if (state.activeView === 'days') {
+        renderSidebarProps();
+      }
+      renderMainCanvas();
+      hydrateVisibleThumbnails();
+    };
+
     function renderAll() {
       if (!state.data) return;
+      updateTabCountsAndLayout();
       renderKpis();
+      renderPropFilterStrip();
       renderSidebarProps();
       renderMainCanvas();
       hydrateVisibleThumbnails();
@@ -1062,6 +1229,7 @@
           if (e.target.tagName === 'INPUT') return;
           const pname = el.getAttribute('data-prop');
           state.selectedProp = (state.selectedProp === pname) ? null : pname;
+          renderPropFilterStrip();
           renderSidebarProps();
           renderMainCanvas();
           hydrateVisibleThumbnails();
@@ -1255,17 +1423,27 @@
         `);
       }
 
-      canvas.innerHTML = htmlBlocks.length
+      const banner = `<div class="view-banner">
+        <div><strong>📅 Day-by-Day Chronological View</strong> — Showing ${htmlBlocks.length} day(s)${state.selectedProp ? ` filtered to <strong>${esc(state.selectedProp)}</strong>` : ''}</div>
+        ${state.selectedProp ? `<button type="button" class="btn" style="padding:3px 10px;font-size:12px;" onclick="window.clearPropFilter()">✕ Clear Filter</button>` : `<span style="font-size:12px;color:var(--text-muted);">Tap 🏠 By Property or 📸 Photos above to switch grouping</span>`}
+      </div>`;
+
+      canvas.innerHTML = banner + (htmlBlocks.length
         ? htmlBlocks.join('')
-        : `<div class="gate-card" style="margin:20px auto;"><h2>No Matching Records</h2><p>Clear your property filter or adjust toggles above.</p></div>`;
+        : `<div class="gate-card" style="margin:20px auto;"><h2>No Matching Records</h2><p>Clear your property filter or adjust toggles above.</p></div>`);
     }
 
     function renderPropsGroupedView(canvas) {
       const props = (state.data.properties || []).filter((p) => matchesSelectedProp(p.name));
       const days = state.data.days || [];
+      const checks = loadJsonLS(LS_CHECKS, {});
+      const notes = loadJsonLS(LS_NOTES, {});
       const blocks = [];
 
       for (const p of props) {
+        const ckKey = `${state.currentReportId}::${p.name}`;
+        const isChecked = !!checks[ckKey];
+        const noteVal = notes[ckKey] || '';
         const propVisits = [];
         const propNotes = [];
         const propCal = [];
@@ -1294,6 +1472,13 @@
         }
 
         const sub = [];
+        if (p.reconciled_hint) {
+          sub.push(`<div class="adj-alert" style="margin-top:0;">💡 ${esc(p.reconciled_hint)}</div>`);
+        }
+        sub.push(`<div>
+          <input type="text" class="prop-note-input prop-card-note" data-nk="${esc(ckKey)}" value="${esc(noteVal)}" placeholder="Draft invoice $ or scope note for ${esc(p.name)}…" style="margin-top:0;padding:8px 11px;font-size:13px;" />
+        </div>`);
+
         if (propCal.length) {
           sub.push(`<div><div class="sub-block-title">📅 Scheduled Site / Utility Meetings</div><div class="event-list">${
             propCal.map((c) => `<div class="ev-row work-cal"><div class="ev-time">${esc(c.day)} • ${esc(c.time_label)}</div><div class="ev-content">🛠️ <strong>${esc(c.summary)}</strong></div></div>`).join('')
@@ -1308,7 +1493,11 @@
           sub.push(`<div><div class="sub-block-title">📍 All On-Site Timeline Stops</div><div class="event-list">${
             propVisits.map((v) => `<div class="ev-row ${p.category === 'supply' ? 'supply-stop' : 'job-stop'}">
               <div class="ev-time">${esc(v.day)} • ${esc(v.span_label)}</div>
-              <div class="ev-content"><strong>${esc(v.dur_label)}</strong>${v.property !== p.name ? ` <span style="color:#fbbf24;">(Timeline snapped to ${esc(v.property)}; matched via EXIF GPS @ ${esc(p.name)})</span>` : ''}</div>
+              <div class="ev-content">
+                <strong>${esc(v.dur_label)}</strong>
+                ${v.property !== p.name ? ` <span style="color:#fbbf24;">(Timeline snapped to ${esc(v.property)}; matched via EXIF GPS @ ${esc(p.name)})</span>` : ''}
+                ${v.adjacent_exif_note && v.property === p.name ? `<div class="adj-alert">📍 ${esc(v.adjacent_exif_note)}</div>` : ''}
+              </div>
             </div>`).join('')
           }</div></div>`);
         }
@@ -1322,12 +1511,16 @@
         }
 
         blocks.push(`
-          <article class="day-card">
+          <article class="day-card" style="${isChecked ? 'opacity:0.68;' : ''}">
             <div class="day-head">
-              <div class="day-title">${esc(p.name)}</div>
+              <label class="day-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                <input type="checkbox" class="prop-card-chk" data-ck="${esc(ckKey)}" ${isChecked ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--green);cursor:pointer;" title="Mark reviewed / billed" />
+                <span>${esc(p.name)}${p.category === 'supply' ? ' <small style="color:#fbbf24;font-weight:700;">(Supply / Lumber)</small>' : ''}</span>
+              </label>
               <div class="day-pills">
                 ${p.mins ? `<span class="pill ${p.category === 'supply' ? 'pill-amber' : 'pill-green'}">${esc(p.dur_label)} across ${p.visits} stop(s)</span>` : ''}
                 ${p.camera_photos ? `<span class="pill pill-muted">📸 ${p.camera_photos} camera photo(s)</span>` : ''}
+                ${p.notes_count ? `<span class="pill pill-muted">📝 ${p.notes_count} field note(s)</span>` : ''}
               </div>
             </div>
             <div class="day-body">${sub.join('') || '<div style="color:var(--text-muted);">No detailed stops</div>'}</div>
@@ -1335,7 +1528,31 @@
         `);
       }
 
-      canvas.innerHTML = blocks.join('');
+      const banner = `<div class="view-banner">
+        <div><strong>🏠 Grouped by Property / Invoice Prep</strong> — ${blocks.length} property &amp; supplier group(s)${state.selectedProp ? ` filtered to <strong>${esc(state.selectedProp)}</strong>` : ''}</div>
+        <span style="font-size:12px;color:var(--text-muted);">Check off properties &amp; add scope notes, then click 📋 Copy Invoice Prep</span>
+      </div>`;
+
+      canvas.innerHTML = banner + blocks.join('');
+
+      canvas.querySelectorAll('.prop-card-chk').forEach((chk) => {
+        chk.addEventListener('change', () => {
+          const all = loadJsonLS(LS_CHECKS, {});
+          all[chk.getAttribute('data-ck')] = chk.checked;
+          saveJsonLS(LS_CHECKS, all);
+          renderSidebarProps();
+          renderPropsGroupedView(canvas);
+          hydrateVisibleThumbnails();
+        });
+      });
+
+      canvas.querySelectorAll('.prop-card-note').forEach((inp) => {
+        inp.addEventListener('input', () => {
+          const all = loadJsonLS(LS_NOTES, {});
+          all[inp.getAttribute('data-nk')] = inp.value;
+          saveJsonLS(LS_NOTES, all);
+        });
+      });
     }
 
     function renderPhotoWallView(canvas) {
@@ -1354,9 +1571,14 @@
         }
       }
 
-      canvas.innerHTML = cards.length
+      const banner = `<div class="view-banner">
+        <div><strong>📸 Photo &amp; Receipt Wall</strong> — ${cards.length} upright EXIF photo(s)${state.selectedProp ? ` at <strong>${esc(state.selectedProp)}</strong>` : ''}</div>
+        <span style="font-size:12px;color:var(--text-muted);">Tap any photo or Woodhaven slip to zoom 2x or rotate</span>
+      </div>`;
+
+      canvas.innerHTML = banner + (cards.length
         ? `<div class="day-card"><div class="day-head"><div class="day-title">📸 All Jobsite &amp; Lumber Receipt Photos (${cards.length})</div><div class="day-pills"><span class="pill pill-muted">Click any photo to zoom or rotate</span></div></div><div class="day-body"><div class="photo-strip">${cards.join('')}</div></div></div>`
-        : `<div class="gate-card" style="margin:20px auto;"><h2>No Photos Match Filter</h2><p>Select another property on the left or enable Phone Screenshots.</p></div>`;
+        : `<div class="gate-card" style="margin:20px auto;"><h2>No Photos Match Filter</h2><p>Select another property chip above or enable 📱 Screenshots.</p></div>`);
     }
 
     /* Lightbox Controls */
@@ -1389,15 +1611,22 @@
     }
 
     /* Event Listeners */
-    document.querySelectorAll('.view-tab').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.view-tab').forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.activeView = btn.getAttribute('data-view');
-        renderMainCanvas();
-        hydrateVisibleThumbnails();
+    window.clearPropFilter = function() {
+      state.selectedProp = null;
+      renderPropFilterStrip();
+      renderSidebarProps();
+      renderMainCanvas();
+      hydrateVisibleThumbnails();
+    };
+
+    const viewTabsBar = document.getElementById('view-tabs-bar');
+    if (viewTabsBar) {
+      viewTabsBar.addEventListener('click', (e) => {
+        const btn = e.target.closest('.view-tab');
+        if (!btn) return;
+        window.switchReconcilerView(btn.getAttribute('data-view'));
       });
-    });
+    }
 
     document.getElementById('chk-anchors').addEventListener('change', (e) => {
       state.showAnchors = e.target.checked;
@@ -1411,6 +1640,7 @@
     });
     document.getElementById('chk-screenshots').addEventListener('change', (e) => {
       state.showScreenshots = e.target.checked;
+      updateTabCountsAndLayout();
       renderMainCanvas();
       hydrateVisibleThumbnails();
     });
@@ -1421,17 +1651,20 @@
     });
 
     document.getElementById('btn-clear-filter').addEventListener('click', () => {
-      state.selectedProp = null;
-      renderSidebarProps();
-      renderMainCanvas();
-      hydrateVisibleThumbnails();
+      window.clearPropFilter();
     });
 
     document.getElementById('period-select').addEventListener('change', (e) => {
       loadReport(e.target.value);
     });
 
-    document.getElementById('btn-refresh').addEventListener('click', () => {
+    document.getElementById('btn-refresh').addEventListener('click', async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map((r) => r.update()));
+        } catch (_) {}
+      }
       boot();
     });
 
