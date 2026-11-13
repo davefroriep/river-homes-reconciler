@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1120" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Weekly Work Reconciler — River Homes, LLC</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <style>
+    :root {
+      --bg-deep: #070c17;
+      --bg-main: #0b1120;
+      --bg-card: #131d31;
+      --bg-card-hover: #192640;
+      --bg-elevated: #1e293b;
+      --border: #26354d;
+      --border-bright: #3b5275;
+      --text-main: #f8fafc;
+      --text-sec: #cbd5e1;
+      --text-muted: #8b9bb4;
+      --blue: #38bdf8;
+      --blue-dark: #0284c7;
+      --blue-tint: rgba(56, 189, 248, 0.12);
+      --green: #10b981;
+      --green-tint: rgba(16, 185, 129, 0.13);
+      --amber: #f59e0b;
+      --amber-tint: rgba(245, 158, 11, 0.13);
+      --purple: #a78bfa;
+      --purple-tint: rgba(167, 139, 250, 0.13);
+      --red: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sticky Full-Width Top Command Bar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: rgba(11, 17, 32, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 11px 22px;
+    }
+    .topbar-inner {
+      max-width: 1560px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand img {
+      height: 36px;
+      width: auto;
+      border-radius: 6px;
+      background: #fff;
+      padding: 2px 4px;
+    }
+    .brand-title {
+      font-size: 16.5px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .brand-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .topbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .period-select {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      color: var(--text-sec);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 13px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.14s ease;
+    }
+    .btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-bright);
+      color: #fff;
+    }
+    .btn-primary {
+      background: var(--blue-dark);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #0369a1;
+    }
+
+    /* Main Fluid Workspace */
+    .workspace-wrap {
+      max-width: 1560px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 18px 22px 40px;
+      flex: 1;
+    }
+
+    /* Unlock / Loading Screen */
+    .gate-card {
+      max-width: 520px;
+      margin: 70px auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    }
+    .gate-card h2 { font-size: 19px; margin-bottom: 8px; }
+    .gate-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 18px; }
+    .key-input {
+      width: 100%;
+      background: var(--bg-deep);
+      border: 1px solid var(--border-bright);
+      color: var(--text-main);
+      padding: 11px 13px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      font-family: monospace;
+    }
+
+    /* KPI Summary Strip */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .kpi-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .kpi-val {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+    }
+    .kpi-val.green { color: #34d399; }
+    .kpi-val.amber { color: #fbbf24; }
+    .kpi-val.blue { color: var(--blue); }
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* View Tabs & Filter Controls Bar */
+    .toolbar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 15px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .view-tabs {
+      display: flex;
+      gap: 6px;
+      background: var(--bg-deep);
+      padding: 4px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+    }
+    .view-tab {
+      background: transparent;
+      color: var(--text-sec);
+      border: none;
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.14s;
+    }
+    .view-tab.active {
+      background: var(--blue-dark);
+      color: #fff;
+    }
+    .toggles {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+      color: var(--text-sec);
+    }
+    .toggle-lbl {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle-lbl input { accent-color: var(--blue); width: 15px; height: 15px; cursor: pointer; }
+
+    /* Two-Column Main Split */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 380px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* Left Sticky Property Summary Panel */
+    .sidebar-panel {
+      position: sticky;
+      top: 74px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      max-height: calc(100vh - 94px);
+      overflow-y: auto;
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .panel-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-sec);
+    }
+
+    .prop-item {
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 12px;
+      margin-bottom: 9px;
+      transition: all 0.14s;
+      cursor: pointer;
+    }
+    .prop-item:hover { border-color: var(--border-bright); }
+    .prop-item.selected {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 1px var(--blue);
+      background: rgba(2, 132, 199, 0.1);
+    }
+    .prop-item.checked-done { opacity: 0.62; }
+    .prop-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .prop-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14.5px;
+    }
+    .prop-name-row input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--green);
+      cursor: pointer;
+    }
+    .prop-hours {
+      font-size: 14px;
+      font-weight: 800;
+      color: #34d399;
+      white-space: nowrap;
+    }
+    .prop-hours.supply { color: #fbbf24; }
+    .prop-bar-track {
+      height: 5px;
+      background: var(--bg-elevated);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 7px;
+    }
+    .prop-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #38bdf8);
+      border-radius: 99px;
+    }
+    .prop-bar-fill.supply { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .prop-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+    .mini-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+    .prop-note-input {
+      width: 100%;
+      margin-top: 8px;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      color: var(--text-sec);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 12px;
+      font-family: inherit;
+    }
+    .prop-note-input:focus { border-color: var(--blue); outline: none; }
+
+    /* Day Cards */
+    .day-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+    .day-head {
+      background: rgba(30, 41, 59, 0.65);
+      border-bottom: 1px solid var(--border);
+      padding: 13px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .day-title {
+      font-size: 16.5px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .day-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .pill-green { background: var(--green-tint); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .pill-amber { background: var(--amber-tint); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .pill-muted { background: rgba(148, 163, 184, 0.12); color: var(--text-muted); border: 1px solid var(--border); }
+
+    .day-body {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .sub-block-title {
+      font-size: 11.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Event Rows */
+    .event-list { display: flex; flex-direction: column; gap: 7px; }
+    .ev-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      padding: 9px 12px;
+      border-radius: 9px;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      font-size: 13.8px;
+    }
+    .ev-row.work-cal {
+      background: rgba(16, 185, 129, 0.09);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+    .ev-row.anchor-cal {
+      background: rgba(100, 116, 139, 0.08);
+      border: 1px dashed #334155;
+      color: var(--text-muted);
+    }
+    .ev-row.field-note {
+      background: var(--blue-tint);
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+    .ev-row.supply-stop {
+      border-left: 3px solid var(--amber);
+    }
+    .ev-row.job-stop {
+      border-left: 3px solid var(--green);
+    }
+
+    .ev-time {
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--blue);
+      white-space: nowrap;
+      min-width: 150px;
+    }
+    .ev-row.anchor-cal .ev-time { color: var(--text-muted); }
+    .ev-content { flex: 1; }
+    .ev-prop-badge {
+      display: inline-block;
+      font-weight: 700;
+      color: #fff;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-bright);
+      padding: 1px 8px;
+      border-radius: 6px;
+      margin-right: 6px;
+      font-size: 13px;
+    }
+    .adj-alert {
+      margin-top: 6px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: var(--amber-tint);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fcd34d;
+      font-size: 12.5px;
+    }
+
+    /* Photo Thumbnail Grid */
+    .photo-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    .photo-card {
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.14s, border-color 0.14s;
+      display: flex;
+      flex-direction: column;
+    }
+    .photo-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--blue);
+    }
+    .photo-thumb-wrap {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: var(--bg-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .photo-thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .photo-placeholder {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 8px;
+      text-align: center;
+    }
+    .photo-meta {
+      padding: 7px 9px;
+      font-size: 11.5px;
+    }
+    .photo-meta-top {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      color: var(--text-sec);
+      margin-bottom: 2px;
+    }
+    .photo-meta-prop {
+      color: var(--blue);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Full-Screen Lightbox Modal */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(4, 7, 15, 0.94);
+      display: none;
+      flex-direction: column;
+    }
+    .lightbox.open { display: flex; }
+    .lb-top {
+      padding: 12px 20px;
+      background: rgba(11, 17, 32, 0.9);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .lb-caption { font-size: 14px; font-weight: 600; color: var(--text-main); }
+    .lb-sub { font-size: 12px; color: var(--text-muted); }
+    .lb-actions { display: flex; align-items: center; gap: 8px; }
+    .lb-stage {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+    .lb-stage img {
+      max-width: 94vw;
+      max-height: 82vh;
+      object-fit: contain;
+      border-radius: 6px;
+      transition: transform 0.18s ease;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    .lb-stage.zoomed { align-items: flex-start; justify-content: flex-start; }
+    .lb-stage.zoomed img {
+      max-width: none;
+      max-height: none;
+      width: 175vw;
+      cursor: grab;
+    }
+    .lb-nav {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(30, 41, 59, 0.85);
+      color: #fff;
+      border: 1px solid var(--border-bright);
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 210;
+    }
+    .lb-prev { left: 16px; }
+    .lb-next { right: 16px; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 16px 22px;
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      background: var(--bg-deep);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: 100%;
+    }
+    .rev-badge {
+      font-family: monospace;
+      color: var(--text-sec);
+      background: var(--bg-card);
+      padding: 3px 9px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1120px) {
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .main-grid { grid-template-columns: 1fr; }
+      .sidebar-panel { position: static; max-height: none; }
+    }
+    @media (max-width: 640px) {
+      .topbar { padding: 10px 12px; }
+      .workspace-wrap { padding: 12px 12px 32px; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .kpi-val { font-size: 20px; }
+      .ev-row { flex-direction: column; gap: 4px; }
+      .ev-time { min-width: 0; }
+      .photo-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img src="logo.jpg" alt="River Homes" />
+        <div>
+          <div class="brand-title">River Homes — Weekly Work Reconciler</div>
+          <div class="brand-sub" id="hdr-subtitle">AES-128-GCM Encrypted Contractor Portal</div>
+        </div>
+      </div>
+
+      <div class="topbar-controls">
+        <select id="period-select" class="period-select" style="display:none;"></select>
+        <button type="button" class="btn" id="btn-copy-summary" title="Copy checked properties & notes">📋 Copy Invoice Prep</button>
+        <a href="https://davefroriep.github.io/river-homes-logger/" target="_blank" rel="noopener" class="btn">➕ Field Logger</a>
+        <button type="button" class="btn btn-primary" id="btn-refresh">↻ Sync Latest</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace-wrap">
+    <!-- Unlock / Status Gate -->
+    <div id="gate-box" class="gate-card">
+      <h2 id="gate-title">Decrypting Weekly Triangulation…</h2>
+      <p id="gate-msg">Unlocking encrypted jobsite timeline, EXIF photos, and calendar anchors locally in your browser.</p>
+      <div id="key-form" style="display:none;">
+        <input type="password" id="key-input" class="key-input" placeholder="Paste Reconciler Portal Key or #k=... URL" />
+        <button type="button" class="btn btn-primary" id="btn-unlock" style="width:100%; justify-content:center; padding:10px;">🔓 Unlock Reconciler Portal</button>
+      </div>
+    </div>
+
+    <!-- Main Decrypted Dashboard -->
+    <div id="dashboard" style="display:none;">
+      <section class="kpi-grid" id="kpi-grid"></section>
+
+      <section class="toolbar">
+        <div class="view-tabs">
+          <button type="button" class="view-tab active" data-view="days">📅 Day-by-Day</button>
+          <button type="button" class="view-tab" data-view="props">🏠 By Property / Invoice Prep</button>
+          <button type="button" class="view-tab" data-view="photos">📸 Photo &amp; Receipt Wall</button>
+        </div>
+
+        <div class="toggles">
+          <label class="toggle-lbl">
+            <input type="checkbox" id="chk-anchors" checked />
+            <span>🧭 Calendar Memory Anchors</span>
+          </label>
+          <label class="toggle-lbl">
+            <input type="checkbox" id="chk-comms" checked />
+            <span>💬 Texts &amp; Calls</span>
+          </label>
+          <label class="toggle-lbl">
+            <input type="checkbox" id="chk-screenshots" />
+            <span id="lbl-screenshots">📱 Phone Screenshots</span>
+          </label>
+          <label class="toggle-lbl">
+            <input type="checkbox" id="chk-hide-empty" />
+            <span>Hide Off-Days</span>
+          </label>
+        </div>
+      </section>
+
+      <div class="main-grid" id="split-layout">
+        <aside class="sidebar-panel" id="sidebar-panel">
+          <div class="panel-head">
+            <span class="panel-title">💰 Unbilled Stops &amp; Checklist</span>
+            <button type="button" class="btn" id="btn-clear-filter" style="padding:3px 9px; font-size:11.5px; display:none;">Show All</button>
+          </div>
+          <div id="prop-list"></div>
+        </aside>
+
+        <section id="main-canvas"></section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Full-Screen Zoomable Photo & Receipt Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <div class="lb-top">
+      <div>
+        <div class="lb-caption" id="lb-caption">Photo</div>
+        <div class="lb-sub" id="lb-sub"></div>
+      </div>
+      <div class="lb-actions">
+        <button type="button" class="btn" id="btn-lb-rotate">↻ Rotate 90°</button>
+        <button type="button" class="btn" id="btn-lb-zoom">🔍 Zoom 2x</button>
+        <button type="button" class="btn btn-primary" id="btn-lb-close">✕ Close (Esc)</button>
+      </div>
+    </div>
+    <button type="button" class="lb-nav lb-prev" id="btn-lb-prev">‹</button>
+    <div class="lb-stage" id="lb-stage">
+      <img id="lb-img" src="" alt="Jobsite or Receipt Photo" />
+    </div>
+    <button type="button" class="lb-nav lb-next" id="btn-lb-next">›</button>
+  </div>
+
+  <footer>
+    <div>River Homes, LLC • Zero-Plaintext AES-128-GCM Reconciler • Primary Calendar Memory Firewall Active</div>
+    <div class="rev-badge">Rev v1.0 — 2026-11-13 07:28</div>
+  </footer>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    const LS_KEY = 'rh_reconciler_aes_key';
+    const LS_CHECKS = 'rh_reconciler_checks_v1';
+    const LS_NOTES = 'rh_reconciler_notes_v1';
+
+    let state = {
+      keyB64: '',
+      reportsIndex: [],
+      currentReportId: '',
+      data: null,
+      photoMap: {},
+      photosLoaded: false,
+      activeView: 'days',
+      selectedProp: null,
+      showAnchors: true,
+      showComms: true,
+      showScreenshots: false,
+      hideEmptyDays: false,
+      lightboxList: [],
+      lightboxIdx: 0,
+      lbRotation: 0,
+      lbZoomed: false
+    };
+
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function fmtDur(mins) {
+      const m = Math.round(Number(mins) || 0);
+      const h = Math.floor(m / 60);
+      const r = m % 60;
+      return h > 0 ? `${h}h ${String(r).padStart(2, '0')}m` : `${r}m`;
+    }
+
+    function b64UrlToBytes(b64url) {
+      let b64 = b64url.trim().replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      const bin = atob(b64);
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return arr;
+    }
+
+    async function decryptEnvelope(envJson, keyB64) {
+      const rawKey = b64UrlToBytes(keyB64);
+      const cryptoKey = await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['decrypt']);
+      const iv = b64UrlToBytes(envJson.iv);
+      const ct = b64UrlToBytes(envJson.ct);
+      const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, cryptoKey, ct);
+      return JSON.parse(new TextDecoder().decode(plainBuf));
+    }
+
+    function extractKeyFromInput(raw) {
+      const s = (raw || '').trim();
+      const m = s.match(/(?:[#&?]k=)([A-Za-z0-9_-]{16,})/);
+      if (m) return m[1];
+      if (/^[A-Za-z0-9_-]{20,48}$/.test(s)) return s;
+      return '';
+    }
+
+    function loadJsonLS(k, fallback) {
+      try { return JSON.parse(localStorage.getItem(k) || '') || fallback; }
+      catch (_) { return fallback; }
+    }
+
+    function saveJsonLS(k, val) {
+      try { localStorage.setItem(k, JSON.stringify(val)); } catch (_) {}
+    }
+
+    async function fetchJsonNoCache(url) {
+      const sep = url.includes('?') ? '&' : '?';
+      const res = await fetch(`${url}${sep}t=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    }
+
+    async function boot() {
+      const hash = window.location.hash || '';
+      const hashKey = extractKeyFromInput(hash);
+      const mRep = hash.match(/(?:[#&?]r=)([A-Za-z0-9_-]+)/);
+      if (mRep) state.currentReportId = mRep[1];
+
+      if (hashKey) {
+        state.keyB64 = hashKey;
+        localStorage.setItem(LS_KEY, hashKey);
+      } else {
+        state.keyB64 = localStorage.getItem(LS_KEY) || '';
+      }
+
+      try {
+        const idxObj = await fetchJsonNoCache('./reports/index.json');
+        state.reportsIndex = idxObj.reports || [];
+      } catch (e) {
+        showGateError('No Triangulation Reports Found Yet', 'Run triangulate_week.py to publish your first encrypted report.');
+        return;
+      }
+
+      if (!state.reportsIndex.length) {
+        showGateError('No Reports Published Yet', 'Run triangulate_week.py to sync your weekly summary.');
+        return;
+      }
+
+      if (!state.currentReportId || !state.reportsIndex.some((r) => r.id === state.currentReportId)) {
+        state.currentReportId = state.reportsIndex[0].id;
+      }
+
+      renderPeriodDropdown();
+
+      if (!state.keyB64) {
+        promptForKey('Unlock Weekly Reconciler', 'Open this page using your personal #k=... bookmark link once (it saves automatically on this device), or paste your key below:');
+        return;
+      }
+
+      await loadReport(state.currentReportId);
+    }
+
+    function showGateError(title, msg) {
+      document.getElementById('dashboard').style.display = 'none';
+      const gb = document.getElementById('gate-box');
+      gb.style.display = 'block';
+      document.getElementById('gate-title').textContent = title;
+      document.getElementById('gate-msg').textContent = msg;
+    }
+
+    function promptForKey(title, msg) {
+      showGateError(title, msg);
+      document.getElementById('key-form').style.display = 'block';
+    }
+
+    function renderPeriodDropdown() {
+      const sel = document.getElementById('period-select');
+      if (state.reportsIndex.length >= 1) {
+        sel.style.display = 'inline-block';
+        sel.innerHTML = state.reportsIndex
+          .map((r) => `<option value="${esc(r.id)}" ${r.id === state.currentReportId ? 'selected' : ''}>${esc(r.label)}</option>`)
+          .join('');
+      }
+    }
+
+    async function loadReport(reportId) {
+      try {
+        document.getElementById('gate-box').style.display = 'block';
+        document.getElementById('key-form').style.display = 'none';
+        document.getElementById('gate-title').textContent = 'Decrypting Report…';
+        document.getElementById('gate-msg').textContent = 'Verifying AES-128-GCM key and building full-screen view…';
+
+        const env = await fetchJsonNoCache(`./reports/${reportId}.json`);
+        const data = await decryptEnvelope(env, state.keyB64);
+
+        state.currentReportId = reportId;
+        state.data = data;
+        state.photoMap = {};
+        state.photosLoaded = false;
+        state.selectedProp = null;
+
+        document.getElementById('gate-box').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('hdr-subtitle').textContent =
+          `Unbilled Window: ${data.period_label} • Last Invoice: ${data.last_billed_invoice || 'N/A'} • Synced ${data.generated_at}`;
+        document.getElementById('lbl-screenshots').textContent =
+          `📱 Phone Screenshots (${data.kpis.screenshots || 0})`;
+
+        renderAll();
+
+        // Asynchronously fetch & decrypt photo thumbnails so UI is instantaneous
+        loadPhotosAsync(reportId);
+      } catch (err) {
+        localStorage.removeItem(LS_KEY);
+        state.keyB64 = '';
+        promptForKey('Decryption Key Required or Invalid', 'Could not decrypt report with stored key. Paste your #k=... link or key:');
+      }
+    }
+
+    async function loadPhotosAsync(reportId) {
+      try {
+        const pEnv = await fetchJsonNoCache(`./reports/photos_${reportId}.json`);
+        if (state.currentReportId !== reportId) return;
+        const pObj = await decryptEnvelope(pEnv, state.keyB64);
+        state.photoMap = (pObj && pObj.photos) ? pObj.photos : {};
+        state.photosLoaded = true;
+        hydrateVisibleThumbnails();
+      } catch (_) {
+        state.photosLoaded = true;
+      }
+    }
+
+    function hydrateVisibleThumbnails() {
+      document.querySelectorAll('img[data-pid]').forEach((img) => {
+        const pid = img.getAttribute('data-pid');
+        if (state.photoMap[pid]) {
+          img.src = state.photoMap[pid];
+          img.style.display = 'block';
+          const ph = img.parentElement.querySelector('.photo-placeholder');
+          if (ph) ph.style.display = 'none';
+        }
+      });
+    }
+
+    function renderAll() {
+      if (!state.data) return;
+      renderKpis();
+      renderSidebarProps();
+      renderMainCanvas();
+      hydrateVisibleThumbnails();
+    }
+
+    function renderKpis() {
+      const k = state.data.kpis;
+      const grid = document.getElementById('kpi-grid');
+      grid.innerHTML = `
+        <div class="kpi-card">
+          <div class="kpi-label">Jobsite On-Site Time</div>
+          <div class="kpi-val green">${fmtDur(k.jobsite_mins)}</div>
+          <div class="kpi-sub">${k.jobsite_stops} GPS stop(s) + ${k.field_notes_count} field note(s)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Lumber &amp; Supply Runs</div>
+          <div class="kpi-val amber">${fmtDur(k.supply_mins)}</div>
+          <div class="kpi-sub">${k.supply_stops} stop(s) (Woodhaven, Ferguson, HD)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Jobsite &amp; Receipt Photos</div>
+          <div class="kpi-val blue">${k.camera_photos}</div>
+          <div class="kpi-sub">${k.ignored_home_photos} home photos ignored @ 799 Rue</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Contractor Texts &amp; Calls</div>
+          <div class="kpi-val">${k.calls_count} <span style="font-size:15px;font-weight:600;color:var(--text-muted);">calls</span> · ${k.texts_count} <span style="font-size:15px;font-weight:600;color:var(--text-muted);">texts</span></div>
+          <div class="kpi-sub">Katie, Marek, subs &amp; suppliers</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Primary Google Calendar</div>
+          <div class="kpi-val">${k.cal_work_count} <span style="font-size:14px;color:#34d399;">work</span> · ${k.cal_anchor_count} <span style="font-size:14px;color:var(--text-muted);">anchors</span></div>
+          <div class="kpi-sub">Readonly primary • Invoice firewall active</div>
+        </div>
+      `;
+    }
+
+    function renderSidebarProps() {
+      const props = state.data.properties || [];
+      const checks = loadJsonLS(LS_CHECKS, {});
+      const notes = loadJsonLS(LS_NOTES, {});
+      const maxMins = Math.max(60, ...props.map((p) => p.mins || 0));
+
+      const clearBtn = document.getElementById('btn-clear-filter');
+      clearBtn.style.display = state.selectedProp ? 'inline-flex' : 'none';
+
+      const container = document.getElementById('prop-list');
+      container.innerHTML = props.map((p) => {
+        const ckKey = `${state.currentReportId}::${p.name}`;
+        const isChecked = !!checks[ckKey];
+        const noteVal = notes[ckKey] || '';
+        const isSelected = state.selectedProp === p.name;
+        const pct = Math.min(100, Math.max(4, Math.round(((p.mins || 0) / maxMins) * 100)));
+        const isSupply = p.category === 'supply';
+
+        const badges = [];
+        if (p.visits) badges.push(`<span class="mini-pill">📍 ${p.visits} stop${p.visits > 1 ? 's' : ''}</span>`);
+        if (p.camera_photos) badges.push(`<span class="mini-pill">📸 ${p.camera_photos} photo${p.camera_photos > 1 ? 's' : ''}</span>`);
+        if (p.notes_count) badges.push(`<span class="mini-pill">📝 ${p.notes_count} note${p.notes_count > 1 ? 's' : ''}</span>`);
+        if (p.cal_mtgs) badges.push(`<span class="mini-pill">📅 ${p.cal_mtgs} cal mtg</span>`);
+
+        return `
+          <div class="prop-item ${isSelected ? 'selected' : ''} ${isChecked ? 'checked-done' : ''}" data-prop="${esc(p.name)}">
+            <div class="prop-top">
+              <div class="prop-name-row">
+                <input type="checkbox" class="prop-chk" data-ck="${esc(ckKey)}" ${isChecked ? 'checked' : ''} title="Mark reviewed / billed" />
+                <span>${esc(p.name)}${isSupply ? ' <small style="color:#fbbf24;">(Supply)</small>' : ''}</span>
+              </div>
+              <span class="prop-hours ${isSupply ? 'supply' : ''}">${p.mins ? esc(p.dur_label) : '—'}</span>
+            </div>
+            <div class="prop-bar-track">
+              <div class="prop-bar-fill ${isSupply ? 'supply' : ''}" style="width:${p.mins ? pct : 6}%;"></div>
+            </div>
+            <div class="prop-badges">${badges.join('')}</div>
+            ${p.reconciled_hint ? `<div class="adj-alert" style="margin-top:7px;font-size:11.5px;">💡 ${esc(p.reconciled_hint)}</div>` : ''}
+            <input type="text" class="prop-note-input" data-nk="${esc(ckKey)}" value="${esc(noteVal)}" placeholder="Draft invoice $ or scope note…" />
+          </div>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.prop-item').forEach((el) => {
+        el.addEventListener('click', (e) => {
+          if (e.target.tagName === 'INPUT') return;
+          const pname = el.getAttribute('data-prop');
+          state.selectedProp = (state.selectedProp === pname) ? null : pname;
+          renderSidebarProps();
+          renderMainCanvas();
+          hydrateVisibleThumbnails();
+        });
+      });
+
+      container.querySelectorAll('.prop-chk').forEach((chk) => {
+        chk.addEventListener('change', () => {
+          const all = loadJsonLS(LS_CHECKS, {});
+          all[chk.getAttribute('data-ck')] = chk.checked;
+          saveJsonLS(LS_CHECKS, all);
+          renderSidebarProps();
+        });
+      });
+
+      container.querySelectorAll('.prop-note-input').forEach((inp) => {
+        inp.addEventListener('input', () => {
+          const all = loadJsonLS(LS_NOTES, {});
+          all[inp.getAttribute('data-nk')] = inp.value;
+          saveJsonLS(LS_NOTES, all);
+        });
+      });
+    }
+
+    function matchesSelectedProp(propStr) {
+      if (!state.selectedProp) return true;
+      if (!propStr) return false;
+      return propStr === state.selectedProp || propStr.startsWith(state.selectedProp + ' ');
+    }
+
+    function buildPhotoCardHtml(p, idxInLightbox) {
+      const src = state.photoMap[p.id] || '';
+      return `
+        <div class="photo-card" data-lbidx="${idxInLightbox}">
+          <div class="photo-thumb-wrap">
+            <img data-pid="${esc(p.id)}" src="${src}" alt="${esc(p.filename)}" style="${src ? 'display:block;' : 'display:none;'}" />
+            <div class="photo-placeholder" style="${src ? 'display:none;' : ''}">Loading encrypted photo…</div>
+          </div>
+          <div class="photo-meta">
+            <div class="photo-meta-top">
+              <span>${esc(p.time_label)}</span>
+              <span>${p.is_screenshot ? '📱 Screen' : '📷 EXIF'}</span>
+            </div>
+            <div class="photo-meta-prop" title="${esc(p.property || p.filename)}">${esc(p.clean_property || p.property || p.filename)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMainCanvas() {
+      const canvas = document.getElementById('main-canvas');
+      state.lightboxList = [];
+
+      if (state.activeView === 'days') {
+        renderDaysView(canvas);
+      } else if (state.activeView === 'props') {
+        renderPropsGroupedView(canvas);
+      } else {
+        renderPhotoWallView(canvas);
+      }
+
+      canvas.querySelectorAll('.photo-card[data-lbidx]').forEach((card) => {
+        card.addEventListener('click', () => {
+          openLightbox(parseInt(card.getAttribute('data-lbidx'), 10));
+        });
+      });
+    }
+
+    function renderDaysView(canvas) {
+      const days = state.data.days || [];
+      const htmlBlocks = [];
+
+      for (const d of days) {
+        const calFiltered = (d.cal_events || []).filter((ev) => {
+          if (!ev.is_work_candidate && !state.showAnchors) return false;
+          if (state.selectedProp) {
+            return ev.is_work_candidate && matchesSelectedProp(ev.matched_property || '');
+          }
+          return true;
+        });
+
+        const flogsFiltered = (d.flogs || []).filter((f) => matchesSelectedProp(f.property));
+        const visitsFiltered = (d.visits || []).filter((v) =>
+          matchesSelectedProp(v.property) || (v.adjacent_prop && matchesSelectedProp(v.adjacent_prop))
+        );
+        const photosFiltered = (d.photos || []).filter((p) => {
+          if (p.is_screenshot && !state.showScreenshots) return false;
+          return matchesSelectedProp(p.clean_property || p.property);
+        });
+        const commsFiltered = (!state.showComms || state.selectedProp) ? [] : (d.comms || []);
+
+        const hasWork = flogsFiltered.length || visitsFiltered.length || photosFiltered.length ||
+          calFiltered.some((c) => c.is_work_candidate);
+
+        if (state.hideEmptyDays && !hasWork) continue;
+        if (state.selectedProp && !hasWork) continue;
+
+        const dayPills = [];
+        if (d.total_job_mins > 0 && !state.selectedProp) {
+          dayPills.push(`<span class="pill pill-green">🛠️ ${fmtDur(d.total_job_mins)} Jobsite</span>`);
+        }
+        if (d.total_supply_mins > 0 && !state.selectedProp) {
+          dayPills.push(`<span class="pill pill-amber">🪵 ${fmtDur(d.total_supply_mins)} Supply</span>`);
+        }
+        if (!d.total_job_mins && !d.total_supply_mins && !flogsFiltered.length) {
+          dayPills.push(`<span class="pill pill-muted">Off-Site / No GPS Stops</span>`);
+        }
+
+        const sections = [];
+
+        if (calFiltered.length) {
+          const rows = calFiltered.map((ev) => {
+            const loc = ev.location ? ` <span style="color:var(--text-muted);">@ ${esc(ev.location)}</span>` : '';
+            if (ev.is_work_candidate) {
+              const propBadge = ev.matched_property ? `<span class="ev-prop-badge">${esc(ev.matched_property)}</span>` : '';
+              return `<div class="ev-row work-cal">
+                <div class="ev-time">${esc(ev.time_label)}</div>
+                <div class="ev-content">🛠️ <strong>[WORK / JOBSITE]</strong> ${propBadge} <strong>${esc(ev.summary)}</strong>${loc}</div>
+              </div>`;
+            }
+            return `<div class="ev-row anchor-cal">
+              <div class="ev-time">${esc(ev.time_label)}</div>
+              <div class="ev-content">🧭 <em>[Memory Anchor — Non-Billable]</em> <strong>${esc(ev.summary)}</strong>${loc}</div>
+            </div>`;
+          }).join('');
+          sections.push(`<div><div class="sub-block-title">📅 Calendar Schedule &amp; Memory Anchors</div><div class="event-list">${rows}</div></div>`);
+        }
+
+        if (flogsFiltered.length) {
+          const rows = flogsFiltered.map((f) => {
+            const amt = f.amount != null ? ` — <strong style="color:#34d399;">$${Number(f.amount).toFixed(2)}</strong>` : '';
+            return `<div class="ev-row field-note">
+              <div class="ev-time">${esc(f.time_label)}</div>
+              <div class="ev-content"><span class="ev-prop-badge">${esc(f.property)}</span>${esc(f.note)}${amt}</div>
+            </div>`;
+          }).join('');
+          sections.push(`<div><div class="sub-block-title">📝 Fast-Add &amp; Logged Field Notes</div><div class="event-list">${rows}</div></div>`);
+        }
+
+        if (visitsFiltered.length) {
+          const rows = visitsFiltered.map((v) => {
+            const cls = v.category === 'supply' ? 'supply-stop' : 'job-stop';
+            const adj = v.adjacent_exif_note ? `<div class="adj-alert">📍 ${esc(v.adjacent_exif_note)}</div>` : '';
+            return `<div class="ev-row ${cls}">
+              <div class="ev-time">${esc(v.span_label)} (${esc(v.dur_label)})</div>
+              <div class="ev-content">
+                <span class="ev-prop-badge">${esc(v.property)}</span>
+                ${v.category === 'supply' ? '<span style="color:#fbbf24;font-size:12px;font-weight:700;">Supply / Lumber</span>' : ''}
+                ${adj}
+              </div>
+            </div>`;
+          }).join('');
+          sections.push(`<div><div class="sub-block-title">📍 Google Maps Timeline Stops</div><div class="event-list">${rows}</div></div>`);
+        }
+
+        if (photosFiltered.length) {
+          const cards = photosFiltered.map((p) => {
+            const lbIdx = state.lightboxList.length;
+            state.lightboxList.push({ ...p, day_header: d.header });
+            return buildPhotoCardHtml(p, lbIdx);
+          }).join('');
+          sections.push(`<div><div class="sub-block-title">📸 Jobsite &amp; Receipt Photos (${photosFiltered.length})</div><div class="photo-strip">${cards}</div></div>`);
+        }
+
+        if (commsFiltered.length) {
+          const rows = commsFiltered.map((c) => {
+            if (c.kind === 'msg') {
+              return `<div class="ev-row">
+                <div class="ev-time">${esc(c.time_label)}</div>
+                <div class="ev-content">💬 <strong>${esc(c.direction)} ${esc(c.contact)}:</strong> "${esc(c.body)}"</div>
+              </div>`;
+            }
+            return `<div class="ev-row">
+              <div class="ev-time">${esc(c.time_label)}</div>
+              <div class="ev-content">📞 <strong>${esc(c.direction)} ${esc(c.contact)}</strong> <span style="color:var(--text-muted);">(${esc(c.duration_label)})</span></div>
+            </div>`;
+          }).join('');
+          sections.push(`<div><div class="sub-block-title">💬 Contractor Texts &amp; Calls (${commsFiltered.length})</div><div class="event-list">${rows}</div></div>`);
+        }
+
+        if (!sections.length) continue;
+
+        htmlBlocks.push(`
+          <article class="day-card">
+            <div class="day-head">
+              <div class="day-title">${esc(d.header)}</div>
+              <div class="day-pills">${dayPills.join('')}</div>
+            </div>
+            <div class="day-body">${sections.join('')}</div>
+          </article>
+        `);
+      }
+
+      canvas.innerHTML = htmlBlocks.length
+        ? htmlBlocks.join('')
+        : `<div class="gate-card" style="margin:20px auto;"><h2>No Matching Records</h2><p>Clear your property filter or adjust toggles above.</p></div>`;
+    }
+
+    function renderPropsGroupedView(canvas) {
+      const props = (state.data.properties || []).filter((p) => matchesSelectedProp(p.name));
+      const days = state.data.days || [];
+      const blocks = [];
+
+      for (const p of props) {
+        const propVisits = [];
+        const propNotes = [];
+        const propCal = [];
+        const propPhotos = [];
+
+        for (const d of days) {
+          for (const c of (d.cal_events || [])) {
+            if (c.is_work_candidate && c.matched_property === p.name) {
+              propCal.push({ ...c, day: d.short_label });
+            }
+          }
+          for (const f of (d.flogs || [])) {
+            if (f.property === p.name) propNotes.push({ ...f, day: d.short_label });
+          }
+          for (const v of (d.visits || [])) {
+            if (v.property === p.name || v.adjacent_prop === p.name) {
+              propVisits.push({ ...v, day: d.short_label, header: d.header });
+            }
+          }
+          for (const ph of (d.photos || [])) {
+            if (ph.is_screenshot && !state.showScreenshots) continue;
+            if ((ph.clean_property || ph.property) === p.name) {
+              propPhotos.push({ ...ph, day_header: d.header, day_short: d.short_label });
+            }
+          }
+        }
+
+        const sub = [];
+        if (propCal.length) {
+          sub.push(`<div><div class="sub-block-title">📅 Scheduled Site / Utility Meetings</div><div class="event-list">${
+            propCal.map((c) => `<div class="ev-row work-cal"><div class="ev-time">${esc(c.day)} • ${esc(c.time_label)}</div><div class="ev-content">🛠️ <strong>${esc(c.summary)}</strong></div></div>`).join('')
+          }</div></div>`);
+        }
+        if (propNotes.length) {
+          sub.push(`<div><div class="sub-block-title">📝 Logged Field Notes</div><div class="event-list">${
+            propNotes.map((f) => `<div class="ev-row field-note"><div class="ev-time">${esc(f.day)} • ${esc(f.time_label)}</div><div class="ev-content">${esc(f.note)}</div></div>`).join('')
+          }</div></div>`);
+        }
+        if (propVisits.length) {
+          sub.push(`<div><div class="sub-block-title">📍 All On-Site Timeline Stops</div><div class="event-list">${
+            propVisits.map((v) => `<div class="ev-row ${p.category === 'supply' ? 'supply-stop' : 'job-stop'}">
+              <div class="ev-time">${esc(v.day)} • ${esc(v.span_label)}</div>
+              <div class="ev-content"><strong>${esc(v.dur_label)}</strong>${v.property !== p.name ? ` <span style="color:#fbbf24;">(Timeline snapped to ${esc(v.property)}; matched via EXIF GPS @ ${esc(p.name)})</span>` : ''}</div>
+            </div>`).join('')
+          }</div></div>`);
+        }
+        if (propPhotos.length) {
+          const pCards = propPhotos.map((ph) => {
+            const lbIdx = state.lightboxList.length;
+            state.lightboxList.push(ph);
+            return buildPhotoCardHtml({ ...ph, clean_property: `${ph.day_short}` }, lbIdx);
+          }).join('');
+          sub.push(`<div><div class="sub-block-title">📸 Property &amp; Receipt Photos (${propPhotos.length})</div><div class="photo-strip">${pCards}</div></div>`);
+        }
+
+        blocks.push(`
+          <article class="day-card">
+            <div class="day-head">
+              <div class="day-title">${esc(p.name)}</div>
+              <div class="day-pills">
+                ${p.mins ? `<span class="pill ${p.category === 'supply' ? 'pill-amber' : 'pill-green'}">${esc(p.dur_label)} across ${p.visits} stop(s)</span>` : ''}
+                ${p.camera_photos ? `<span class="pill pill-muted">📸 ${p.camera_photos} camera photo(s)</span>` : ''}
+              </div>
+            </div>
+            <div class="day-body">${sub.join('') || '<div style="color:var(--text-muted);">No detailed stops</div>'}</div>
+          </article>
+        `);
+      }
+
+      canvas.innerHTML = blocks.join('');
+    }
+
+    function renderPhotoWallView(canvas) {
+      const days = state.data.days || [];
+      const cards = [];
+      for (const d of days) {
+        for (const ph of (d.photos || [])) {
+          if (ph.is_screenshot && !state.showScreenshots) continue;
+          if (!matchesSelectedProp(ph.clean_property || ph.property)) continue;
+          const lbIdx = state.lightboxList.length;
+          state.lightboxList.push({ ...ph, day_header: d.header });
+          cards.push(buildPhotoCardHtml({
+            ...ph,
+            time_label: `${d.short_label} ${ph.time_label}`
+          }, lbIdx));
+        }
+      }
+
+      canvas.innerHTML = cards.length
+        ? `<div class="day-card"><div class="day-head"><div class="day-title">📸 All Jobsite &amp; Lumber Receipt Photos (${cards.length})</div><div class="day-pills"><span class="pill pill-muted">Click any photo to zoom or rotate</span></div></div><div class="day-body"><div class="photo-strip">${cards.join('')}</div></div></div>`
+        : `<div class="gate-card" style="margin:20px auto;"><h2>No Photos Match Filter</h2><p>Select another property on the left or enable Phone Screenshots.</p></div>`;
+    }
+
+    /* Lightbox Controls */
+    function openLightbox(idx) {
+      if (!state.lightboxList.length) return;
+      state.lightboxIdx = (idx + state.lightboxList.length) % state.lightboxList.length;
+      state.lbRotation = 0;
+      state.lbZoomed = false;
+      updateLightboxDom();
+      document.getElementById('lightbox').classList.add('open');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('open');
+    }
+
+    function updateLightboxDom() {
+      const item = state.lightboxList[state.lightboxIdx];
+      if (!item) return;
+      const img = document.getElementById('lb-img');
+      const stage = document.getElementById('lb-stage');
+      img.src = state.photoMap[item.id] || '';
+      img.style.transform = `rotate(${state.lbRotation}deg)`;
+      stage.classList.toggle('zoomed', state.lbZoomed);
+      document.getElementById('btn-lb-zoom').textContent = state.lbZoomed ? '🔍 Fit Screen' : '🔍 Zoom 2x';
+      document.getElementById('lb-caption').textContent =
+        `${item.clean_property || item.property || 'Photo'} — ${item.day_header || ''} @ ${item.time_label}`;
+      document.getElementById('lb-sub').textContent =
+        `${item.filename} (${state.lightboxIdx + 1} of ${state.lightboxList.length})`;
+    }
+
+    /* Event Listeners */
+    document.querySelectorAll('.view-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.view-tab').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.activeView = btn.getAttribute('data-view');
+        renderMainCanvas();
+        hydrateVisibleThumbnails();
+      });
+    });
+
+    document.getElementById('chk-anchors').addEventListener('change', (e) => {
+      state.showAnchors = e.target.checked;
+      renderMainCanvas();
+      hydrateVisibleThumbnails();
+    });
+    document.getElementById('chk-comms').addEventListener('change', (e) => {
+      state.showComms = e.target.checked;
+      renderMainCanvas();
+      hydrateVisibleThumbnails();
+    });
+    document.getElementById('chk-screenshots').addEventListener('change', (e) => {
+      state.showScreenshots = e.target.checked;
+      renderMainCanvas();
+      hydrateVisibleThumbnails();
+    });
+    document.getElementById('chk-hide-empty').addEventListener('change', (e) => {
+      state.hideEmptyDays = e.target.checked;
+      renderMainCanvas();
+      hydrateVisibleThumbnails();
+    });
+
+    document.getElementById('btn-clear-filter').addEventListener('click', () => {
+      state.selectedProp = null;
+      renderSidebarProps();
+      renderMainCanvas();
+      hydrateVisibleThumbnails();
+    });
+
+    document.getElementById('period-select').addEventListener('change', (e) => {
+      loadReport(e.target.value);
+    });
+
+    document.getElementById('btn-refresh').addEventListener('click', () => {
+      boot();
+    });
+
+    document.getElementById('btn-unlock').addEventListener('click', () => {
+      const k = extractKeyFromInput(document.getElementById('key-input').value);
+      if (!k) return;
+      state.keyB64 = k;
+      localStorage.setItem(LS_KEY, k);
+      loadReport(state.currentReportId);
+    });
+
+    document.getElementById('btn-copy-summary').addEventListener('click', async () => {
+      if (!state.data) return;
+      const checks = loadJsonLS(LS_CHECKS, {});
+      const notes = loadJsonLS(LS_NOTES, {});
+      const lines = [`River Homes Invoice Prep (${state.data.period_label}):`];
+      for (const p of (state.data.properties || [])) {
+        const ckKey = `${state.currentReportId}::${p.name}`;
+        const mark = checks[ckKey] ? '[x]' : '[ ]';
+        const note = notes[ckKey] ? ` — Note: ${notes[ckKey]}` : '';
+        lines.push(`${mark} ${p.name}: ${p.dur_label || '0m'} (${p.visits} stops, ${p.camera_photos} photos)${note}`);
+      }
+      try {
+        await navigator.clipboard.writeText(lines.join('\n'));
+        const btn = document.getElementById('btn-copy-summary');
+        const old = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => { btn.textContent = old; }, 1800);
+      } catch (_) {}
+    });
+
+    document.getElementById('btn-lb-close').addEventListener('click', closeLightbox);
+    document.getElementById('btn-lb-prev').addEventListener('click', () => openLightbox(state.lightboxIdx - 1));
+    document.getElementById('btn-lb-next').addEventListener('click', () => openLightbox(state.lightboxIdx + 1));
+    document.getElementById('btn-lb-rotate').addEventListener('click', () => {
+      state.lbRotation = (state.lbRotation + 90) % 360;
+      document.getElementById('lb-img').style.transform = `rotate(${state.lbRotation}deg)`;
+    });
+    document.getElementById('btn-lb-zoom').addEventListener('click', () => {
+      state.lbZoomed = !state.lbZoomed;
+      updateLightboxDom();
+    });
+    document.getElementById('lb-img').addEventListener('click', () => {
+      state.lbZoomed = !state.lbZoomed;
+      updateLightboxDom();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const lb = document.getElementById('lightbox');
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') openLightbox(state.lightboxIdx - 1);
+      if (e.key === 'ArrowRight') openLightbox(state.lightboxIdx + 1);
+    });
+
+    boot();
+  </script>
+</body>
+</html>
